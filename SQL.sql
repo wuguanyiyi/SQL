@@ -137,17 +137,18 @@
 --inner join Orders o on o.EmployeeID = e.EmployeeID
 --inner join Customers c on c.CustomerID =o.CustomerID
 --where e.City = c.City
+
 --14.列出那些產品沒有人買過
 --select od.ProductID
 --from [Order Details] od
 --full join Products p on p.ProductID = od.ProductID
 --where od.ProductID is null
 ----------------------------------------------------------------------------------------
-
 --15.列出所有在每個月月底的訂單
 --select o.OrderID,o.OrderDate
 --from Orders o
 --WHERE o.OrderDate = EOMONTH(o.OrderDate)
+
 --16.列出每個月月底售出的產品
 --select p.ProductID,o.OrderDate
 --from Products p
@@ -157,6 +158,7 @@
 --						from Orders o
 --						where o.OrderDate = EOMONTH(o.OrderDate)
 --					 )
+
 --17.找出有敗過最貴的三個產品中的任何一個的前三個大客戶
 --select top 3 c.CustomerID,c.CompanyName,sum(od.UnitPrice*od.Quantity*(1-od.Discount))as total
 --from Customers c
@@ -169,22 +171,22 @@
 --					)
 --group by c.CustomerID,c.CompanyName
 --order by total desc
---18.找出有敗過銷售金額前三高個產品的前三個大客戶
 
-select top 3 c.CustomerID,c.CompanyName,sum(od.UnitPrice*od.Quantity*(1-od.Discount))as SalesAmount
-from Customers c
-inner join Orders o on o.CustomerID = c.CustomerID
-inner join [Order Details] od on od.OrderID = o.OrderID
-inner join Products p on od.ProductID = p.ProductID
-where p.ProductID in(	select top 3 od.ProductID
-						from [Order Details] od
-						inner join Products p on p.ProductID = od.ProductID
-						inner join Orders o on o.OrderID = od.OrderID
-						group by od.ProductID
-						order by sum(p.UnitPrice*od.Quantity*(1 - od.Discount))desc
-					 )
-group by c.CustomerID,C.CompanyName
-order by SalesAmount DESC
+--18.找出有敗過銷售金額前三高個產品的前三個大客戶
+--select top 3 c.CustomerID,c.CompanyName,sum(od.UnitPrice*od.Quantity*(1-od.Discount))as SalesAmount
+--from Customers c
+--inner join Orders o on o.CustomerID = c.CustomerID
+--inner join [Order Details] od on od.OrderID = o.OrderID
+--inner join Products p on od.ProductID = p.ProductID
+--where p.ProductID in(	select top 3 od.ProductID
+--						from [Order Details] od
+--						inner join Products p on p.ProductID = od.ProductID
+--						inner join Orders o on o.OrderID = od.OrderID
+--						group by od.ProductID
+--						order by sum(p.UnitPrice*od.Quantity*(1 - od.Discount))desc
+--					 )
+--group by c.CustomerID,C.CompanyName
+--order by SalesAmount DESC
 
 --19.找出有敗過銷售金額前三高個產品所屬類別的前三個大客戶
 select top 3 c.CustomerID,c.CompanyName,sum(od.UnitPrice*od.Quantity*(1-od.Discount))as SalesAmount
@@ -192,6 +194,7 @@ from Customers c
 inner join Orders o on o.CustomerID = c.CustomerID
 inner join [Order Details] od on od.OrderID = o.OrderID
 inner join Products p on od.ProductID = p.ProductID
+inner join Categories ca on ca.CategoryID = p.CategoryID
 where p.ProductID in(	select top 3 od.ProductID
 						from [Order Details] od
 						inner join Products p on p.ProductID = od.ProductID
@@ -200,24 +203,32 @@ where p.ProductID in(	select top 3 od.ProductID
 						order by sum(p.UnitPrice*od.Quantity*(1 - od.Discount))desc
 					 )
 group by c.CustomerID,C.CompanyName
-order by SalesAmount DESC 
+order by SalesAmount DESC --有問題
+
 --20.列出消費總金額高於所有客戶平均消費總金額的客戶的名字，以及客戶的消費總金額
 
 --21.列出最熱銷的產品，以及被購買的總金額
+--select top 1 p.ProductID,sum(od.UnitPrice*od.Quantity*(1-od.Discount))as total
+--from [Order Details] od
+--inner join Products p on od.ProductID =p.ProductID		
+--group by p.ProductID
+--order by sum(od.Quantity) desc
 
 --22.列出最少人買的產品
-select top 1 p.ProductID,sum(od.Quantity)as total
-from [Order Details] od
-inner join Products p on od.ProductID = p.ProductID
-group by p.ProductID
-order by total
+--select top 1 p.ProductID,sum(od.Quantity)as total
+--from [Order Details] od
+--inner join Products p on od.ProductID = p.ProductID
+--group by p.ProductID
+--order by total
+
 --23.列出最沒人要買的產品類別 (Categories)
-select top 1 c.CategoryID,sum(od.Quantity)as total
-from Categories c
-inner join Products p on p.CategoryID = c.CategoryID
-inner join [Order Details] od on od.ProductID = p.ProductID
-group by c.CategoryID
-order by total--可能有錯
+--select top 1 c.CategoryID,sum(od.Quantity)as total
+--from Categories c
+--inner join Products p on p.CategoryID = c.CategoryID
+--inner join [Order Details] od on od.ProductID = p.ProductID
+--group by c.CategoryID
+--order by total
+
 --24.列出跟銷售最好的供應商買最多金額的客戶與購買金額 (含購買其它供應商的產品)
 
 --25.列出跟銷售最好的供應商買最多金額的客戶與購買金額 (不含購買其它供應商的產品)
@@ -229,26 +240,57 @@ order by total--可能有錯
 --where od.Quantity is null
 
 --27.列出沒有傳真 (Fax) 的客戶和它的消費總金額
+--select c.CustomerID,sum(od.UnitPrice*od.Quantity*(1-od.Discount)) as total
+--from Customers c
+--inner join Orders o on o.CustomerID = c.CustomerID
+--inner join [Order Details] od on od.OrderID = o.OrderID
+--where c.Fax is null
+--group by c.CustomerID
 
 --28.列出每一個城市消費的產品種類數量
 
 --29.列出目前沒有庫存的產品在過去總共被訂購的數量
-
+--select p.ProductID,sum(od.Quantity) as total
+--from Products p
+--inner join [Order Details] od on od.ProductID =p.ProductID
+--where p.UnitsInStock = 0
+--group by p.ProductID
 --30.列出目前沒有庫存的產品在過去曾經被那些客戶訂購過
+--select distinct c.CustomerID
+--from Products p
+--inner join [Order Details] od on od.ProductID = p.ProductID
+--inner join Orders o on o.OrderID = od.OrderID 
+--inner join Customers c on c.CustomerID =o.CustomerID
+--WHERE p.UnitsInStock = 0 
 
 --31.列出每位員工的下屬的業績總金額
+--select e.EmployeeID,sum(od.UnitPrice*od.Quantity*(1-od.Discount)) as total
+--from Employees e
+--inner join Orders o on o.EmployeeID = e.EmployeeID
+--inner join [Order Details] od on od.OrderID = o.OrderID
+--group by e.EmployeeID
 
 --32.列出每家貨運公司運送最多的那一種產品類別與總數量
 
 --33.列出每一個客戶買最多的產品類別與金額
-
+select p.ProductID
+from Products p
+inner join [Order Details] od on od.ProductID = p.ProductID
+inner join Orders o on o.OrderID = od.OrderID 
+inner join Customers c on c.CustomerID = o.CustomerID
+where c.CustomerID in(	select c.CustomerID
+						from Customers c
+						inner join Orders o on o.CustomerID = c.CustomerID
+						inner join [Order Details] od on od.OrderID = o.OrderID
+						order by )
 
 --34.列出每一個客戶買最多的那一個產品與購買數量
 
 --35.按照城市分類，找出每一個城市最近一筆訂單的送貨時間
+--select o.ShipCity,max(o.ShippedDate) as latest
+--from Orders o
+--where ShippedDate is not null
+--group by o.ShipCity
 
 --36.列出購買金額第五名與第十名的客戶，以及兩個客戶的金額差距
-
-
-
 
